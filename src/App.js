@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BarChart3, LineChart, PieChart, Download, Upload } from 'lucide-react';
+import { BarChart3, LineChart, PieChart, Download, Upload, Menu, X } from 'lucide-react';
 import Papa from 'papaparse';
 import {
   BarChart,
@@ -25,6 +25,7 @@ function App() {
   const [chartType, setChartType] = useState('bar');
   const [fileName, setFileName] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'];
 
@@ -89,6 +90,7 @@ function App() {
     setNumericColumns(['value']);
     setTextColumns(['category', 'description']);
     setFileName('sample-data.csv');
+    setSidebarOpen(false); // Close sidebar on mobile after loading data
   };
 
   const downloadSampleCSV = () => {
@@ -114,7 +116,12 @@ G,349,Seventh item`;
 
   const renderChart = () => {
     if (data.length === 0) {
-      return <p className="text-white/60">Upload a CSV file to see the chart</p>;
+      return (
+        <div className="text-center">
+          <p className="text-white/60 mb-2">Upload a CSV file to see the chart</p>
+          <p className="text-white/40 text-sm">Or use the sample data to get started</p>
+        </div>
+      );
     }
 
     const xAxis = textColumns[0] || columns[0];
@@ -130,22 +137,22 @@ G,349,Seventh item`;
       [yAxis]: parseFloat(row[yAxis]) || 0
     }));
 
+    const tooltipStyle = {
+      backgroundColor: '#1f2937',
+      border: '1px solid #ffffff20',
+      borderRadius: '8px',
+      color: '#ffffff'
+    };
+
     switch (chartType) {
       case 'bar':
         return (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData}>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-              <XAxis dataKey={xAxis} stroke="#ffffff80" />
-              <YAxis stroke="#ffffff80" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #ffffff20',
-                  borderRadius: '8px',
-                  color: '#ffffff'
-                }}
-              />
+              <XAxis dataKey={xAxis} stroke="#ffffff80" fontSize={12} />
+              <YAxis stroke="#ffffff80" fontSize={12} />
+              <Tooltip contentStyle={tooltipStyle} />
               <Legend />
               <Bar dataKey={yAxis} fill={colors[0]} />
             </BarChart>
@@ -154,19 +161,12 @@ G,349,Seventh item`;
 
       case 'line':
         return (
-          <ResponsiveContainer width="100%" height={400}>
-            <RechartsLineChart data={chartData}>
+          <ResponsiveContainer width="100%" height={300}>
+            <RechartsLineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-              <XAxis dataKey={xAxis} stroke="#ffffff80" />
-              <YAxis stroke="#ffffff80" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #ffffff20',
-                  borderRadius: '8px',
-                  color: '#ffffff'
-                }}
-              />
+              <XAxis dataKey={xAxis} stroke="#ffffff80" fontSize={12} />
+              <YAxis stroke="#ffffff80" fontSize={12} />
+              <Tooltip contentStyle={tooltipStyle} />
               <Legend />
               <Line type="monotone" dataKey={yAxis} stroke={colors[0]} strokeWidth={2} />
             </RechartsLineChart>
@@ -175,7 +175,7 @@ G,349,Seventh item`;
 
       case 'pie':
         return (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={300}>
             <RechartsPieChart>
               <Pie
                 data={chartData}
@@ -183,7 +183,7 @@ G,349,Seventh item`;
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={120}
+                outerRadius={80}
                 fill="#8884d8"
                 dataKey={yAxis}
                 nameKey={xAxis}
@@ -192,14 +192,7 @@ G,349,Seventh item`;
                   <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #ffffff20',
-                  borderRadius: '8px',
-                  color: '#ffffff'
-                }}
-              />
+              <Tooltip contentStyle={tooltipStyle} />
             </RechartsPieChart>
           </ResponsiveContainer>
         );
@@ -213,39 +206,84 @@ G,349,Seventh item`;
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* Header */}
       <header className="bg-white/10 backdrop-blur-sm border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-white">Data Visualizer</h1>
-            <div className="flex space-x-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-3 sm:py-4">
+            <h1 className="text-lg sm:text-2xl font-bold text-white">Data Visualizer</h1>
+            
+            {/* Desktop Header Buttons */}
+            <div className="hidden md:flex space-x-3">
               <button
                 onClick={generateSampleData}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Load Sample Data
               </button>
               <button
                 onClick={downloadSampleCSV}
-                className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                className="flex items-center px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download Sample CSV
               </button>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="md:hidden p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+            >
+              {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+
+          {/* Mobile Header Buttons */}
+          <div className="md:hidden pb-3 flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3">
+            <button
+              onClick={generateSampleData}
+              className="px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              Load Sample Data
+            </button>
+            <button
+              onClick={downloadSampleCSV}
+              className="flex items-center justify-center px-3 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download Sample CSV
+            </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-8">
+          
+          {/* Mobile Sidebar Overlay */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+          )}
+
           {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-              <h2 className="text-lg font-semibold text-white mb-4">Upload Data</h2>
+          <div className={`
+            lg:col-span-1 
+            ${sidebarOpen ? 'fixed inset-y-0 left-0 z-50 w-80 transform translate-x-0' : 'hidden lg:block'}
+            lg:static lg:transform-none lg:w-auto lg:z-auto
+          `}>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white/20 h-full lg:h-auto">
+              <div className="flex justify-between items-center lg:block">
+                <h2 className="text-base sm:text-lg font-semibold text-white mb-4">Upload Data</h2>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="lg:hidden p-1 text-white hover:bg-white/20 rounded"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
               {/* Drag & Drop Area */}
               <div
-                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                className={`border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors cursor-pointer ${
                   isDragOver
                     ? 'border-blue-400 bg-blue-400/10'
                     : 'border-white/30 hover:border-white/50'
@@ -265,9 +303,9 @@ G,349,Seventh item`;
                 }}
                 onClick={() => document.getElementById('csv-file-input').click()}
               >
-                <Upload className="w-8 h-8 text-white/60 mx-auto mb-2" />
-                <p className="text-white/80 mb-2">Drag & drop your CSV file here</p>
-                <p className="text-white/60 text-sm">or click to browse</p>
+                <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-white/60 mx-auto mb-2" />
+                <p className="text-white/80 mb-2 text-sm sm:text-base">Drag & drop your CSV file here</p>
+                <p className="text-white/60 text-xs sm:text-sm">or click to browse</p>
                 <input
                   id="csv-file-input"
                   type="file"
@@ -290,21 +328,24 @@ G,349,Seventh item`;
 
               {/* Chart Type Selection */}
               <div className="mt-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Chart Type</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-4">Chart Type</h3>
                 <div className="space-y-2">
                   {chartTypes.map((type) => {
                     const Icon = type.icon;
                     return (
                       <button
                         key={type.id}
-                        onClick={() => setChartType(type.id)}
-                        className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors ${
+                        onClick={() => {
+                          setChartType(type.id);
+                          setSidebarOpen(false); // Close sidebar on mobile after selection
+                        }}
+                        className={`w-full flex items-center px-3 py-2 sm:px-4 sm:py-3 rounded-lg transition-colors text-sm sm:text-base ${
                           chartType === type.id
                             ? 'bg-blue-600 text-white'
                             : 'bg-white/10 text-white/80 hover:bg-white/20'
                         }`}
                       >
-                        <Icon className="w-5 h-5 mr-3" />
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
                         {type.name}
                       </button>
                     );
@@ -316,23 +357,31 @@ G,349,Seventh item`;
 
           {/* Main Content Area */}
           <div className="lg:col-span-3">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-              <h2 className="text-lg font-semibold text-white mb-4">Chart Visualization</h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white/20">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-base sm:text-lg font-semibold text-white">Chart Visualization</h2>
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              </div>
 
               {/* Chart Area */}
-              <div className="bg-white/5 rounded-lg p-4 mb-6 min-h-[400px] flex items-center justify-center">
+              <div className="bg-white/5 rounded-lg p-2 sm:p-4 mb-4 sm:mb-6 min-h-[250px] sm:min-h-[350px] flex items-center justify-center">
                 {renderChart()}
               </div>
 
               {/* Data Preview */}
-              <div className="bg-white/5 rounded-lg p-4">
-                <h3 className="text-lg font-semibold text-white mb-4">Data Preview</h3>
+              <div className="bg-white/5 rounded-lg p-3 sm:p-4">
+                <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">Data Preview</h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-white/80">
+                  <table className="w-full text-white/80 text-sm">
                     <thead>
                       <tr className="border-b border-white/20">
                         {columns.map((col, index) => (
-                          <th key={index} className="text-left py-2 px-4">{col}</th>
+                          <th key={index} className="text-left py-2 px-2 sm:px-4 whitespace-nowrap">{col}</th>
                         ))}
                       </tr>
                     </thead>
@@ -340,14 +389,14 @@ G,349,Seventh item`;
                       {data.slice(0, 5).map((row, index) => (
                         <tr key={index} className="border-b border-white/10">
                           {columns.map((col, colIndex) => (
-                            <td key={colIndex} className="py-2 px-4">{row[col]}</td>
+                            <td key={colIndex} className="py-2 px-2 sm:px-4 whitespace-nowrap">{row[col]}</td>
                           ))}
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   {data.length === 0 && (
-                    <p className="text-white/60 text-center py-8">No data loaded yet</p>
+                    <p className="text-white/60 text-center py-8 text-sm sm:text-base">No data loaded yet</p>
                   )}
                 </div>
               </div>
